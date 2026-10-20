@@ -1,4 +1,5 @@
 import type { MouseEvent } from "react";
+import { useCallback } from "react";
 import type { DefaultRootState } from "react-redux";
 import { useSelector } from "react-redux";
 import { useShowPropertyPane } from "utils/hooks/dragResizeHooks";
@@ -25,16 +26,27 @@ export const useClickToClearSelections = (widgetId: string) => {
     getAnvilSpaceDistributionStatus,
   );
 
-  // Click event handler function
-  return (e: MouseEvent<HTMLElement>) => {
-    // Checking if there is no ongoing dragging, canvas resizing, or space distribution
-    if (!(isDragging || isCanvasResizing || isDistributingSpace)) {
-      // Check if the target is the MainCanvas
-      // Deselect all widgets, focus on the clicked widget, show the property pane, and prevent the default click behavior
-      goToWidgetAdd();
-      focusWidget && focusWidget(widgetId);
-      showPropertyPane && showPropertyPane();
-      e.preventDefault();
-    }
-  };
+  // Click event handler function, memoised so that it only changes with the state it reads
+  return useCallback(
+    (e: MouseEvent<HTMLElement>) => {
+      // Checking if there is no ongoing dragging, canvas resizing, or space distribution
+      if (!(isDragging || isCanvasResizing || isDistributingSpace)) {
+        // Check if the target is the MainCanvas
+        // Deselect all widgets, focus on the clicked widget, show the property pane, and prevent the default click behavior
+        goToWidgetAdd();
+        focusWidget && focusWidget(widgetId);
+        showPropertyPane && showPropertyPane();
+        e.preventDefault();
+      }
+    },
+    [
+      isDragging,
+      isCanvasResizing,
+      isDistributingSpace,
+      widgetId,
+      focusWidget,
+      goToWidgetAdd,
+      showPropertyPane,
+    ],
+  );
 };

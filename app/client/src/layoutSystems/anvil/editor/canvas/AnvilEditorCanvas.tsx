@@ -41,16 +41,20 @@ export const AnvilEditorCanvas = (props: BaseWidgetProps) => {
         clickToClearSelections(event);
       }
     },
-    [clickToClearSelections],
+    [clickToClearSelections, props.layout],
   );
 
+  // Re-register when the handler changes, so the listener never keeps the drag
+  // state or the layout of the render that mounted the canvas.
   useEffect(() => {
-    canvasRef.current?.addEventListener("click", handleOnClickCapture);
+    const canvas = canvasRef.current;
+
+    canvas?.addEventListener("click", handleOnClickCapture);
 
     return () => {
-      canvasRef.current?.removeEventListener("click", handleOnClickCapture);
+      canvas?.removeEventListener("click", handleOnClickCapture);
     };
-  }, []);
+  }, [handleOnClickCapture]);
   /* End of click event listener */
 
   useSelectWidgetListener();
