@@ -28,6 +28,12 @@ const filterBindingSegmentsAndRemoveQuotes = (
   return { binding: bindingStrippedQuotes, subBindings, subValues };
 };
 
+// Replaces the first occurrence of `binding` with `value` as is. Passing the
+// value to String.prototype.replace directly would read `$&`, `$$`, `$'` and
+// `` $` `` in it as replacement patterns and corrupt user data.
+const replaceLiterally = (text: string, binding: string, value: string) =>
+  text.replace(binding, () => value);
+
 export const smartSubstituteDynamicValues = (
   originalBinding: string,
   subSegments: string[],
@@ -50,17 +56,25 @@ export const smartSubstituteDynamicValues = (
       case Types.NULL:
       case Types.UNDEFINED:
         // Direct substitution
-        finalBinding = finalBinding.replace(b, `${value}`);
+        finalBinding = replaceLiterally(finalBinding, b, `${value}`);
         break;
       case Types.STRING:
         // Add quotes to a string
         // JSON.stringify string to escape any unsupported characters
-        finalBinding = finalBinding.replace(b, `${JSON.stringify(value)}`);
+        finalBinding = replaceLiterally(
+          finalBinding,
+          b,
+          `${JSON.stringify(value)}`,
+        );
         break;
       case Types.ARRAY:
       case Types.OBJECT:
         // Stringify and substitute
-        finalBinding = finalBinding.replace(b, JSON.stringify(value, null, 2));
+        finalBinding = replaceLiterally(
+          finalBinding,
+          b,
+          JSON.stringify(value, null, 2),
+        );
         break;
     }
   });
@@ -126,7 +140,7 @@ export const templateSubstituteDynamicValues = (
     } catch (e) {
       // do nothing
     }
-    finalValue = finalValue.replace(b, `${value}`);
+    finalValue = replaceLiterally(finalValue, b, `${value}`);
   });
 
   return finalValue;

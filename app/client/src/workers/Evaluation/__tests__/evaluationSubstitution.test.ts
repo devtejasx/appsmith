@@ -18,6 +18,21 @@ describe("substituteDynamicBindingWithValues", () => {
       expect(result).toBe(expected);
     });
 
+    it("substitutes string values containing $ replacement patterns as they are", () => {
+      const binding = "Hello {{name}}!";
+      const subBindings = ["Hello ", "{{name}}", "!"];
+      const subValues = ["Hello ", "a$$b$&c$'d$`e", "!"];
+      const expected = "Hello a$$b$&c$'d$`e!";
+      const result = substituteDynamicBindingWithValues(
+        binding,
+        subBindings,
+        subValues,
+        EvaluationSubstitutionType.TEMPLATE,
+      );
+
+      expect(result).toBe(expected);
+    });
+
     it("substitute number values", () => {
       const binding = "My age is {{age}}";
       const subBindings = ["My age is ", "{{age}}"];
@@ -182,6 +197,35 @@ describe("substituteDynamicBindingWithValues", () => {
     });
   });
   describe("smart substitution", () => {
+    it("substitutes string and object values containing $ replacement patterns as they are", () => {
+      const binding = `{ "note": {{note}}, "data": {{data}} }`;
+      const subBindings = [
+        '{ "note": ',
+        "{{note}}",
+        ', "data": ',
+        "{{data}}",
+        " }",
+      ];
+      const subValues = [
+        '{ "note": ',
+        "a$$b$'c",
+        ', "data": ',
+        { p: "$&" },
+        " }",
+      ];
+      const expected = `{ "note": "a$$b$'c", "data": {
+  "p": "$&"
+} }`;
+      const result = substituteDynamicBindingWithValues(
+        binding,
+        subBindings,
+        subValues,
+        EvaluationSubstitutionType.SMART_SUBSTITUTE,
+      );
+
+      expect(result).toBe(expected);
+    });
+
     it("substitutes strings, numbers, boolean, undefined, null values correctly", () => {
       const binding = `{
         "name": {{name}},
