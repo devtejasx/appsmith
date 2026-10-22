@@ -29,6 +29,11 @@ export const getIndextoUpdate = (headers: any, headerIndexToUpdate: number) => {
 
 export const queryParamsRegEx = /([\s\S]*?)(\?(?![^{]*})[\s\S]*)?$/;
 
+// Stands in for each {{ }} binding while the query string is split. A
+// private-use character, so it cannot clash with a literal "~" in the URL.
+const BINDING_PLACEHOLDER = "\uE000";
+const BINDING_PLACEHOLDER_REGEX = new RegExp(BINDING_PLACEHOLDER, "g");
+
 export function parseUrlForQueryParams(url: string) {
   const padQueryParams = { key: "", value: "" };
   let params = Array(2).fill(padQueryParams);
@@ -44,7 +49,7 @@ export function parseUrlForQueryParams(url: string) {
     if (isDynamicValue(segment)) {
       dynamicValuesDetected.push(segment);
 
-      return "~";
+      return BINDING_PLACEHOLDER;
     }
 
     return segment;
@@ -65,31 +70,18 @@ export function parseUrlForQueryParams(url: string) {
       return { key: keyValue[0] || "", value: keyValue[1] || "" };
     });
 
-    params = paramsWithDynamicValues.map((queryParam) => {
-      // this time around we check for both key and values.
-      if (queryParam.value.includes("~") || queryParam.key.includes("~")) {
-        let newVal = queryParam.value;
-        let newKey = queryParam.key;
+    // Put the bindings back in order; a replacer function keeps any `$`
+    // sequences in them literal.
+    const restoreBindings = (text: string) =>
+      text.replace(
+        BINDING_PLACEHOLDER_REGEX,
+        () => dynamicValuesDetected.shift() ?? "",
+      );
 
-        if (queryParam.key.includes("~")) {
-          newKey = queryParam?.key?.replace(/~/, dynamicValuesDetected[0]);
-          // remove the first index from detected dynamic values.
-          dynamicValuesDetected.shift();
-        }
-
-        if (queryParam.value.includes("~")) {
-          newVal = queryParam?.value?.replace(/~/, dynamicValuesDetected[0]);
-
-          // remove the first index from detected dynamic values.
-          dynamicValuesDetected.shift();
-        }
-
-        // dynamicValuesDetected.shift();
-        return { key: newKey, value: newVal };
-      }
-
-      return queryParam;
-    });
+    params = paramsWithDynamicValues.map((queryParam) => ({
+      key: restoreBindings(queryParam.key),
+      value: restoreBindings(queryParam.value),
+    }));
   }
 
   return params;

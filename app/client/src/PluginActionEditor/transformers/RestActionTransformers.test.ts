@@ -384,5 +384,14 @@ describe("Api action transformer", () => {
     const result5 = extractApiUrlPath(path5);
 
     expect(result5).toEqual(output5);
+
+    // literal tildes and $ sequences in bindings are kept
+    const path6 = "/~admin/{{Text1.text}}?a=1";
+
+    expect(extractApiUrlPath(path6)).toEqual("/~admin/{{Text1.text}}");
+
+    const path7 = "/users/{{Text1.text.replace(/a/g, '$&$$')}}";
+
+    expect(extractApiUrlPath(path7)).toEqual(path7);
   });
 });

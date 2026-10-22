@@ -68,6 +68,27 @@ describe("Api pane query parameters parsing", () => {
 
     expect(parseUrlForQueryParams(url5)).toEqual(params3);
   });
+
+  test("It keeps literal tildes and every binding of a parameter", () => {
+    expect(parseUrlForQueryParams("user?path=~home&b={{Input1.text}}")).toEqual(
+      [
+        { key: "path", value: "~home" },
+        { key: "b", value: "{{Input1.text}}" },
+      ],
+    );
+
+    expect(
+      parseUrlForQueryParams("user?range={{Input1.text}}-{{Input2.text}}"),
+    ).toEqual([{ key: "range", value: "{{Input1.text}}-{{Input2.text}}" }]);
+  });
+
+  test("It keeps $ sequences in bindings", () => {
+    const binding = "{{Input1.text.replace(/a/g, '$&$$')}}";
+
+    expect(parseUrlForQueryParams(`user?q=${binding}`)).toEqual([
+      { key: "q", value: binding },
+    ]);
+  });
 });
 
 describe("API Body Format Test", () => {

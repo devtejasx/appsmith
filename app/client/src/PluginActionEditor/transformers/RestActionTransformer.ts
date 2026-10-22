@@ -120,28 +120,24 @@ function removeEmptyPairs(keyValueArray: any) {
 // Output 3: /{{Text1.text ? 'users' : 'user'}}/{{"test"}}`
 
 export const extractApiUrlPath = (path: string | undefined) => {
-  const dynamicStringSegments = getDynamicStringSegments(path || "");
-  const dynamicValuesDetected: string[] = [];
+  let templatePaths = "";
 
-  const templateStringSegments = dynamicStringSegments.map((segment) => {
+  for (const segment of getDynamicStringSegments(path || "")) {
     if (isDynamicValue(segment)) {
-      dynamicValuesDetected.push(segment);
-
-      return "~";
+      templatePaths += segment;
+      continue;
     }
 
-    return segment;
-  });
+    // The path ends at the first "?" outside of a binding.
+    const indexOfQueryParams = segment.indexOf("?");
 
-  const indexOfQueryParams = templateStringSegments.join("").indexOf("?");
+    if (indexOfQueryParams !== -1) {
+      templatePaths += segment.slice(0, indexOfQueryParams);
+      break;
+    }
 
-  let templatePaths = templateStringSegments
-    .join("")
-    .slice(0, indexOfQueryParams === -1 ? undefined : indexOfQueryParams);
-
-  dynamicValuesDetected.forEach((val) => {
-    templatePaths = templatePaths.replace(/~/, val);
-  });
+    templatePaths += segment;
+  }
 
   return templatePaths;
 };
