@@ -1,4 +1,5 @@
 import React from "react";
+import { escapeRegExp } from "lodash";
 import { Text } from "@appsmith/ads";
 
 function Highlight({
@@ -12,7 +13,7 @@ function Highlight({
 }) {
   if (!match) return <span className={className}>{text}</span>;
 
-  const regEx = new RegExp(match, "ig");
+  const regEx = new RegExp(escapeRegExp(match), "ig");
   const parts = text?.split(regEx);
 
   if (parts?.length === 1) return <span className={className}>{text}</span>;

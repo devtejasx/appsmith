@@ -5,6 +5,7 @@ import { Colors } from "constants/Colors";
 
 import React, { forwardRef, useEffect, useMemo, useRef, useState } from "react";
 import styled from "styled-components";
+import { escapeRegExp } from "lodash";
 import { isEllipsisActive, removeSpecialChars } from "utils/helpers";
 
 import { TOOLTIP_HOVER_ON_DELAY_IN_S } from "constants/AppConstants";
@@ -118,7 +119,7 @@ export const EntityName = React.memo(
 
     const searchHighlightedName = useMemo(() => {
       if (searchKeyword) {
-        const regex = new RegExp(searchKeyword, "gi");
+        const regex = new RegExp(escapeRegExp(searchKeyword), "gi");
         const delimited = updatedName.replace(regex, function (str) {
           return (
             searchTokenizationDelimiter + str + searchTokenizationDelimiter
